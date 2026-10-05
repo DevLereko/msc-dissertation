@@ -1,0 +1,3 @@
+LOGREG brier=0.1268
+RF brier=0.0320
+XGB brier=0.0419
