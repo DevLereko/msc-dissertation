@@ -1,0 +1,10 @@
+venv/
+data/raw/
+data/processed/
+results/artifacts/*.pkl
+results/artifacts/*.npy
+results/artifacts/*.json
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
