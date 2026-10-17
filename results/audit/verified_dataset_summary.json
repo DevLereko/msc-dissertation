@@ -1,0 +1,80 @@
+{
+  "source_table_counts": {
+    "client": 5369,
+    "account": 4500,
+    "disp": 5369,
+    "trans": 1056320,
+    "order": 6471,
+    "loan": 682,
+    "card": 892,
+    "district": 77
+  },
+  "all_raw_source_files_present": true,
+  "all_processed_counts_match_reported_expected_counts": true,
+  "analytical_population": {
+    "rows": 682,
+    "columns": 20,
+    "unique_loan_id": 682,
+    "unique_account_id": 682,
+    "duplicate_rows": 0,
+    "duplicate_loan_id": 0,
+    "missing_cells": 0,
+    "loan_date_min": "1993-07-05",
+    "loan_date_max": "1998-12-08"
+  },
+  "target": {
+    "mapping": {
+      "A": 0,
+      "B": 1,
+      "C": 0,
+      "D": 1
+    },
+    "source_status_counts": {
+      "A": 203,
+      "B": 31,
+      "C": 403,
+      "D": 45
+    },
+    "class_counts": {
+      "0": 606,
+      "1": 76
+    },
+    "missing_target": 0
+  },
+  "columns": {
+    "identifiers": ["loan_id", "account_id"],
+    "dates": ["loan_date"],
+    "behavioural_predictors": [
+      "total_inflow",
+      "total_outflow",
+      "avg_monthly_inflow",
+      "avg_monthly_outflow",
+      "inflow_volatility",
+      "outflow_volatility",
+      "transaction_frequency",
+      "avg_balance",
+      "min_balance",
+      "max_balance",
+      "balance_volatility",
+      "active_months",
+      "account_tenure_days"
+    ],
+    "loan_attribute_predictors": [
+      "loan_amount",
+      "loan_duration",
+      "loan_payment"
+    ],
+    "target": ["target"],
+    "other_metadata": []
+  },
+  "reported_20_column_reconciliation": "13 behavioural predictors + 3 loan attributes + 1 target + 2 identifiers + 1 loan date = 20 columns; only the 16 predictors are passed to model fitting.",
+  "evidence": [
+    "data/processed/verification.json",
+    "data/processed/loan_summary.json",
+    "data/processed/analytical_dataset.csv",
+    "data/processed/loan_with_target.csv",
+    "src/01_data_loading.py",
+    "src/02_dataset_construction.py",
+    "src/04_feature_engineering.py"
+  ]
+}

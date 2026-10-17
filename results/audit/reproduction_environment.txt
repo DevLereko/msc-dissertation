@@ -1,0 +1,34 @@
+Audit mode: read-only with respect to the repository's original source and results. No pipeline step or model fit was rerun. Saved model inference and XGBoost SHAP calculations were used only for artifact cross-checks and latency measurements; all new deliverables are under results/audit/.
+
+Repository root: /Users/devlereko/Projects/School-MSc/dissertation
+Exact full-pipeline reproduction command from repository root: ./venv/bin/python run_pipeline.py
+The run_pipeline.py docstring gives the same command. README.md also lists equivalent individual src steps in execution order.
+Warning: pipeline steps write/overwrite data/processed files, results/artifacts, results/tables and results/figures. Reproduce in a copy if preservation of the current evidence is required.
+
+Inputs: all eight data/raw/*.asc files are present. The processed CSV recounts match the canonical row counts in data/processed/verification.json.
+Python: 3.11.17 (venv)
+Platform: macOS-26.6-arm64-arm-64bit
+CPU: Apple M4; 10 logical and 10 physical cores as reported by psutil
+Dependency versions observed in the configured venv:
+pandas 2.1.4
+numpy 1.26.2
+scikit-learn 1.3.2
+xgboost 2.0.3
+shap 0.44.0
+scipy 1.11.4
+joblib 1.3.2
+matplotlib 3.8.2
+seaborn 0.13.0
+psutil 5.9.7
+
+Original recorded training times (GridSearchCV .fit wall time, one run): LR 2.1677 s; RF 1.4926 s; XGBoost 0.4275 s. These include hyperparameter search and refit, not just one estimator fit.
+Original computational_report.json records memory_usage_mb=17.02, sampled once by src/12_computational_feasibility.py in that short reporting process. This is not peak RSS for model training or the whole pipeline. The approximately 18 s full-pipeline time appears only in results/summary.md as a rounded claim; no run log is saved.
+
+Additional read-only latency benchmark (audit session; current machine/venv; perf_counter; persisted best estimators; 20 warmups then 250 individual one-row predict_proba calls; batch timing is one 137-row call divided by rows):
+Single-row median inference: LR 0.0181 ms; RF 14.0504 ms; XGBoost 0.4991 ms.
+Single-row mean inference: LR 0.0193 ms; RF 13.7780 ms; XGBoost 0.5706 ms.
+One 137-row batch average per prediction: LR 0.000407 ms; RF 0.09251 ms; XGBoost 0.004605 ms.
+SHAP (XGBoost TreeExplainer; five warmups then 50 one-row calls): single-row median 0.6145 ms. One 137-row SHAP calculation: 3.1180 ms.
+Audit benchmark process high-water RSS: 251.16 MiB, using resource.getrusage(RUSAGE_SELF).ru_maxrss after imports, model loads and SHAP calculations. This is one process's high-water mark and includes interpreter/dependency/model memory; it is not a full-pipeline peak measurement. Single-run timings are indicative, not a statistically controlled benchmark. RF one-row and batch figures differ substantially, so report workload/batching with any use of these numbers.
+
+Warnings: loading the persisted XGBoost model emitted an upstream warning that its binary model format is deprecated and JSON/UBJ is recommended for future compatibility. No pipeline reproduction was run during this audit.
