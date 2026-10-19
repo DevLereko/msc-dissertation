@@ -1,0 +1,111 @@
+{
+  "scope_note": "Read-only prior-loan feasibility audit. Reads raw .asc only; no feature regeneration, no model rerun, no change to existing pipeline outputs.",
+  "table_shapes": {
+    "client": 5369,
+    "disp": 5369,
+    "account": 4500,
+    "loan": 682
+  },
+  "account_client_linkage": {
+    "loans_with_any_disp_link": 682,
+    "loans_with_owner_link": 682,
+    "loans_with_no_owner_but_some_disp": 0,
+    "loan_accounts_with_multiple_clients_owner_plus_disponents": 145,
+    "note": "An account with one owner + dispongents (145 loan accounts) links several clients to the SAME single loan, not to multiple loans. It yields no earlier->later same-client loan pairs."
+  },
+  "question1_clients_with_multiple_loan_accounts": {
+    "owner_only": {
+      "clients_with_more_than_one_loan_account": 0,
+      "total_clients_with_any_loan_account": 682,
+      "distribution_loans_per_client": {
+        "1": 682
+      }
+    },
+    "any_disp_link": {
+      "clients_with_more_than_one_loan_account": 0,
+      "total_clients_with_any_loan_account": 827,
+      "distribution_loans_per_client": {
+        "1": 827
+      }
+    }
+  },
+  "question2_candidate_earlier_later_pairs": {
+    "owner_only_pairs": {
+      "total_earlier_later_pairs": 0,
+      "pairs_where_earlier_has_terminal_status_AB": 0,
+      "pairs_where_earlier_terminal_AND_matured_before_later_issue": 0,
+      "pairs_with_multi_hop_chains_same_client": 0
+    }
+  },
+  "later_loans_eligible": {
+    "later_loans_with_any_same_client_prior_loan": 0,
+    "of_which_prior_outcome_knowable_at_issue": 0,
+    "total_loans_in_population": 682
+  },
+  "conclusion": {
+    "prior_loan_relationships_exist_in_dataset": false,
+    "finding": "ZERO clients are associated with more than one loan account in the PKDD '99 snapshot. Every loan-bearing account is owned by a distinct, unique client, and even including DISPONENT links every client still maps to exactly one loan account (827 distinct clients, all with one loan link each). Consequently there are ZERO earlier->later same-client loan pairs to reconstruct, so a previous-loan repayment feature cannot be built from this dataset at all - independent of the outcome-knowability question.",
+    "implication": "The prior-loan feature is NOT implementable in this study. There is no same-client prior-loan history to engineer. Do not allocate further work to building it; the relationship prerequisite (question 1) is not met, so the harder knowability requirement (question 3) is moot.",
+    "counts_behind_conclusion": {
+      "owner_clients_with_2plus_loan_accounts": 0,
+      "same_client_earlier_later_pairs": 0,
+      "later_loans_with_any_same_client_prior": 0
+    }
+  },
+  "question3_when_outcome_became_known": {
+    "has_snapshot_extraction_date_field": false,
+    "has_maturity_completion_date_field": false,
+    "has_daily_outcome_effective_date_field": false,
+    "available_timing_fields": {
+      "loan_issue_date": "yymmdd, day resolution",
+      "loan_contracted_duration_months": "drive computed contracted end date only",
+      "status": "snapshot A/B/C/D; A/B terminal (repaid/defaulted), C/D censored at extraction - not a known final outcome",
+      "account_open_date": "present in account table; not a loan outcome date"
+    },
+    "conclusion": "The schema establishes the ISSUE date and a CONTRACTED end date (issue + duration). It does NOT record the actual completion date or the snapshot extraction date. Groups A/B are terminal snapshots; C/D are censored. A prior loan's final outcome can be treated as 'knowable at the later issue date' only by ASSUMING the loan matured on its contracted schedule and that no C/D loan is used. Counts of outcome-knowable pairs above include that assumption."
+  },
+  "question4_supportable_prior_features": {
+    "tier1_no_assumptions": {
+      "description": "Relationship facts establishable from IDs alone; no claim about repayment outcome.",
+      "features": [
+        "prior_loans_same_client_count",
+        "prior_loans_same_client_had_terminal_outcome_flag",
+        "prior_largest_loan_amount_same_client",
+        "prior_sum_loan_amount_same_client",
+        "time_since_prior_loan_issue (issue-date based only, no outcome)"
+      ]
+    },
+    "tier2_requires_maturity_assumption": {
+      "description": "Usable only if one accepts the assumption that a prior A/B loan matured on its contracted schedule before the later issue date. Outcome is KNOWN only for A/B.",
+      "features": [
+        "prior_loan_default_flag (prior B status, matured before issue)",
+        "prior_loan_repaid_flag (prior A status, matured before issue)",
+        "prior_loan_outcome_rate_same_client"
+      ],
+      "issued_pairs_supported": 0
+    },
+    "tier3_not_supportable": {
+      "description": "Requires info not in the schema (actual completion date, exact extraction date, or the future/current status of running loans).",
+      "features": [
+        "final_outcome_of_any_running_prior_loan (C/D are censored)",
+        "payments_actually_made_toward_prior_loan (no per-loan event stream; trans is account-level)",
+        "prior_loan_default_status_at EXACT later issue instant (day-resolution, no intraday order, no completion date)"
+      ]
+    },
+    "recommended_next_step_for_safe_addition": "If pursued, implement ONLY Tier-1 issue-date and count features and a Tier-2 default flag restricted to pairs where the prior loan is A/B AND its contracted end date is before the later issue date. Document the maturity assumption explicitly. Do NOT include C/D prior loans as known outcomes."
+  },
+  "status_coverage": {
+    "all_loans": {
+      "C": 403,
+      "A": 203,
+      "D": 45,
+      "B": 31
+    },
+    "terminal_AB_total": 234,
+    "censored_CD_total": 448
+  },
+  "environment": {
+    "pandas": "2.1.4",
+    "python": "3.11.17"
+  }
+}

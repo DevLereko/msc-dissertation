@@ -1,0 +1,27 @@
+========================================================================
+PRIOR-LOAN FEASIBILITY AUDIT (read-only)
+========================================================================
+Scope: raw .asc only. No features regenerated, no models rerun.
+
+Q1. Clients linked to multiple loan accounts:
+    owner-only     : 0 / 682
+    any-disp-link  : 0 / 827
+
+Q2. Earlier->later same-client loan pairs (owner-only):
+    all ordered pairs                      : 0
+    prior loan terminal (A/B)              : 0
+    prior terminal AND matured before issue: 0
+
+Q3. Outcome-knowability:
+    snapshot/extraction date field  : False
+    maturity/completion date field  : False
+    The schema establishes the ISSUE date and a CONTRACTED end date (issue + duration). It does NOT record the actual completion date or the snapshot extraction date. Groups A/B are terminal snapshots; C/D are censored. A prior loan's final outcome can be treated as 'knowable at the later issue date' only by ASSUMING the loan matured on its contracted schedule and that no C/D loan is used. Counts of outcome-knowable pairs above include that assumption.
+
+Q4. Later loans eligible for a leakage-safe prior feature:
+    later loans with ANY same-client prior loan : 0
+    ... of which prior outcome can be established : 0
+    See JSON for tiered feature recommendations.
+
+DECISIVE CONCLUSION:
+    ZERO clients are associated with more than one loan account in the PKDD '99 snapshot. Every loan-bearing account is owned by a distinct, unique client, and even including DISPONENT links every client still maps to exactly one loan account (827 distinct clients, all with one loan link each). Consequently there are ZERO earlier->later same-client loan pairs to reconstruct, so a previous-loan repayment feature cannot be built from this dataset at all - independent of the outcome-knowability question.
+========================================================================
