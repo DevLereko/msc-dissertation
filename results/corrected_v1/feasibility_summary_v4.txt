@@ -1,0 +1,60 @@
+========================================================================
+PHASE 1 FEASIBILITY INVESTIGATION SUMMARY
+Generated: 2026-10-19T21:32:01.205915
+========================================================================
+
+DECISION 1 — Feature cutoff
+  Loans with same-day transactions: 122 / 682 (17.89%)
+  Time-of-day field available: False
+  Recommendation: strict cutoff (transaction_date < loan_date) unless time-of-day is available.
+
+DECISION 2 — No-history policy
+  Loans with NO prior-day history: 0
+  Loans with 1–5 prior transactions: 3
+  Median prior transactions per loan: 77.0
+  Cutoff checked: transaction_date < loan_date; current feature pipeline uses transaction_date <= loan_date.
+  Corrected feature values regenerated: False
+
+DECISION 3 — Target semantics
+  Status A: 203 loans (1993–1997)
+  Status B: 31 loans (1993–1997)
+  Status C: 403 loans (1994–1998)
+  Status D: 45 loans (1994–1998)
+  Target: status-derived binary target in the PKDD '99 snapshot ({'A': 0, 'B': 1, 'C': 0, 'D': 1}).
+  Limitation: Combining finished (A/B) and running (C/D) contracts does not establish prediction of eventual default over a common future horizon.
+
+DECISION 4 — Test set
+  Temporal distribution of defaults:
+    1993: 4/20 (20.0%)
+    1994: 14/101 (13.86%)
+    1995: 12/90 (13.33%)
+    1996: 16/117 (13.68%)
+    1997: 26/196 (13.27%)
+    1998: 4/158 (2.53%)
+
+DECISION 5 — Inner CV
+  Saved train rows: 409; initial training window: 163
+  Validation windows: 4; minimum defaults: 4 (practical threshold: 5)
+  Feasible under stated rule: False
+  The five-default threshold is a practical investigation rule, not a universal statistical guarantee.
+
+XAI COMPATIBILITY
+  SHAP: 0.44.0
+  LIME available: True
+  Scope: Package availability only; this check does not establish fitted-model API compatibility, successful explanation generation, local fidelity, or explanation quality.
+
+SECONDARY CV ESTIMATE (exploratory baseline resampling)
+  LR: ROC-AUC 0.864 ± 0.0878 | AP 0.6271
+  RF: ROC-AUC 0.8987 ± 0.0508 | AP 0.6823
+  XGB: ROC-AUC 0.8704 ± 0.0444 | AP 0.6485
+  Scope: Exploratory supplementary resampling; not an independent validation of the fully tuned procedure.
+  Dataset/cutoff: data/processed/analytical_dataset.csv; Existing analytical dataset from the current inclusive date <= loan_date feature pipeline.
+  Folds/weights: 5-fold shuffled stratified, non-temporal; specified hyperparameters are not retuned within folds.; XGBoost scale_pos_weight is calculated separately from each fold's training labels.
+  AP is average precision, not necessarily trapezoidal PR-AUC.
+
+========================================================================
+NEXT STEPS
+1. Review the JSON findings at results/corrected_v1/feasibility_findings_v4.json
+2. Treat this as feasibility evidence, not proof that temporal CV or XAI is valid.
+3. Seek supervisor approval for methodology changes before rerunning the main pipeline.
+========================================================================
