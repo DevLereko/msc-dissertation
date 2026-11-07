@@ -1,89 +1,84 @@
 """
 02_dataset_construction.py
-Constructs the loan-level analytical dataset with leakage-controlled
-historical observation windows.
+Constructs the loan-level analytical cohort (Section 3.4).
+
+Corrected v2:
+- Only completed loans (status A or B) enter the cohort (Section 3.4.3).
+  Running loans (C, D) are excluded and counted, never relabelled.
+- Source tables in data/processed are read, never modified.
+- Client/district joins are kept for data understanding only; they are not
+  predictors (Section 3.7.3).
 """
 
-import pandas as pd
-import numpy as np
 import json
-from pathlib import Path
 
-PROCESSED = Path("data/processed")
+import pandas as pd
+
+from config import DATA, SOURCE, TARGET_MAP
+
 
 def load_all():
     return {
-        name: pd.read_csv(PROCESSED / f"{name}.csv", low_memory=False)
-        for name in ["client", "account", "disp", "trans", "order", "loan", "card", "district"]
+        name: pd.read_csv(SOURCE / f"{name}.csv", low_memory=False)
+        for name in ["client", "account", "disp", "loan", "district"]
     }
+
 
 def build_loan_dataset(t):
-    loan = t["loan"].copy()
-    account = t["account"].copy()
-    disp = t["disp"].copy()
-    client = t["client"].copy()
-    district = t["district"].copy()
+    loan = t["loan"].merge(t["account"], on="account_id", how="left",
+                           suffixes=("", "_acc"))
 
-    # Attach account info to each loan
-    loan = loan.merge(account, on="account_id", how="left", suffixes=("", "_acc"))
-
-    # Attach clients linked to each account (via disp).
-    # Multiple clients per account possible; take owner (type='OWNER') if available.
-    disp_client = disp.merge(client, on="client_id", how="left")
-    owners = disp_client[disp_client["type"] == "OWNER"][
-        ["account_id", "client_id", "district_id"]
-    ]
-    owners = owners.drop_duplicates(subset="account_id", keep="first")
-    # Rename to avoid collision with account.district_id
-    owners = owners.rename(columns={
-        "client_id": "owner_client_id",
-        "district_id": "owner_district_id",
-    })
+    # Owner client per account (data understanding only, not a predictor)
+    disp_client = t["disp"].merge(t["client"], on="client_id", how="left")
+    owners = (disp_client[disp_client["type"] == "OWNER"]
+              [["account_id", "client_id", "district_id"]]
+              .drop_duplicates(subset="account_id", keep="first")
+              .rename(columns={"client_id": "owner_client_id",
+                               "district_id": "owner_district_id"}))
     loan = loan.merge(owners, on="account_id", how="left")
 
-    # Attach district details: primary key A1 == loan.district_id
-    district_keyed = district.rename(columns={"A1": "district_id"})
-    loan = loan.merge(district_keyed, on="district_id", how="left", suffixes=("", "_dist"))
-
+    district = t["district"].rename(columns={"A1": "district_id"})
+    loan = loan.merge(district, on="district_id", how="left", suffixes=("", "_dist"))
     return loan
 
-def assign_target(loan):
-    """
-    A: finished/paid       -> 0
-    B: finished/not paid   -> 1
-    C: running/paid        -> 0
-    D: running/client debt -> 1
-    """
-    mapping = {"A": 0, "B": 1, "C": 0, "D": 1}
-    loan["target"] = loan["status"].map(mapping)
-    return loan
+
+def assign_target(loans: pd.DataFrame) -> pd.DataFrame:
+    """A = completed and repaid -> 0; B = completed and not paid -> 1.
+    C and D (running contracts) are excluded from the cohort."""
+    loans = loans[loans["status"].isin(TARGET_MAP.keys())].copy()
+    loans["target"] = loans["status"].map(TARGET_MAP).astype(int)
+    return loans
+
 
 def main():
-    print("Loading tables...")
     t = load_all()
+    all_loans = build_loan_dataset(t)
+    assert len(all_loans) == len(t["loan"]), "Join changed the loan row count"
 
-    print("Building loan-level dataset...")
-    loan = build_loan_dataset(t)
-    loan = assign_target(loan)
+    status_counts = all_loans["status"].value_counts().sort_index().to_dict()
+    cohort = assign_target(all_loans)
 
-    # Report
-    print(f"\nLoan records: {len(loan)}")
-    print(f"Target distribution:\n{loan['target'].value_counts()}")
-    print(f"Missing targets: {loan['target'].isna().sum()}")
+    # Checks against Section 3.4.3 / Table 4.2
+    assert cohort["loan_id"].is_unique
+    assert set(cohort["status"]) <= {"A", "B"}
+    assert cohort["target"].notna().all()
 
-    # Save
-    loan.to_csv(PROCESSED / "loan_with_target.csv", index=False)
-    print("\nSaved: data/processed/loan_with_target.csv")
-
-    # Save summary for Chapter 4
     summary = {
-        "total_loans": len(loan),
-        "non_default": int((loan["target"] == 0).sum()),
-        "default": int((loan["target"] == 1).sum()),
-        "missing_target": int(loan["target"].isna().sum()),
+        "total_loan_records": int(len(all_loans)),
+        "status_counts": {k: int(v) for k, v in status_counts.items()},
+        "excluded_status_C": int(status_counts.get("C", 0)),
+        "excluded_status_D": int(status_counts.get("D", 0)),
+        "completed_cohort": int(len(cohort)),
+        "non_default_A": int((cohort["target"] == 0).sum()),
+        "default_B": int((cohort["target"] == 1).sum()),
     }
-    with open(PROCESSED / "loan_summary.json", "w") as f:
+    print(json.dumps(summary, indent=2))
+
+    cohort.to_csv(DATA / "loan_cohort.csv", index=False)
+    with open(DATA / "cohort_summary.json", "w") as f:
         json.dump(summary, f, indent=2)
+    print(f"Saved: {DATA / 'loan_cohort.csv'}")
+
 
 if __name__ == "__main__":
     main()
