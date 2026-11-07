@@ -1,43 +1,62 @@
 """
 09_calibration.py
-Calibration curves and Brier score analysis.
+Calibration ASSESSMENT (Brier score, reliability curves).
+
+No calibrator (Platt / isotonic) is fitted, so no labels are used to change
+any model. Curves are shown for the validation partition (used during
+selection) and the test partition (from 08's single evaluation).
+Quantile bins are used because the partitions are small.
 """
 
-import numpy as np
+import json
+
+import joblib
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from pathlib import Path
+import pandas as pd
 from sklearn.calibration import calibration_curve
 from sklearn.metrics import brier_score_loss
 
-ARTIFACTS = Path("results/artifacts")
-FIGURES = Path("results/figures")
-FIGURES.mkdir(parents=True, exist_ok=True)
+from config import EVALUATION, FEATURE_COLS, MODELS, SPLITS
+from modeling import DISPLAY, MODEL_NAMES
+
+N_BINS = 5
+
 
 def main():
-    y_test = np.load(ARTIFACTS / "y_test.npy")
+    val = pd.read_csv(SPLITS / "val.csv")
+    pred = pd.read_csv(EVALUATION / "test_predictions.csv")  # produced by 08
 
-    fig, ax = plt.subplots(figsize=(8, 6))
-    for name in ["logreg", "rf", "xgb"]:
-        y_proba = np.load(ARTIFACTS / f"y_proba_{name}.npy")
-        prob_true, prob_pred = calibration_curve(y_test, y_proba, n_bins=10)
-        brier = brier_score_loss(y_test, y_proba)
-        ax.plot(prob_pred, prob_true, marker="o", label=f"{name.upper()} (Brier={brier:.3f})")
+    sets = {"validation": (val["target"].to_numpy(),
+                           {n: joblib.load(MODELS / f"{n}.pkl").predict_proba(val[FEATURE_COLS])[:, 1]
+                            for n in MODEL_NAMES}),
+            "test": (pred["target"].to_numpy(),
+                     {n: pred[f"proba_{n}"].to_numpy() for n in MODEL_NAMES})}
 
-    ax.plot([0, 1], [0, 1], "k--", label="Perfect calibration")
-    ax.set_xlabel("Predicted Probability")
-    ax.set_ylabel("Observed Frequency")
-    ax.set_title("Calibration Curves")
-    ax.legend()
-    fig.savefig(FIGURES / "fig_4_calibration_curves.png", dpi=300, bbox_inches="tight")
-    plt.close()
+    out = {}
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    for ax, (part, (y, probs)) in zip(axes, sets.items()):
+        out[part] = {"rows": int(len(y)), "defaults": int(y.sum()), "brier": {}}
+        for n in MODEL_NAMES:
+            p = probs[n]
+            out[part]["brier"][n] = round(float(brier_score_loss(y, p)), 4)
+            pt, pp = calibration_curve(y, p, n_bins=N_BINS, strategy="quantile")
+            ax.plot(pp, pt, marker="o", label=f"{DISPLAY[n]} (Brier={out[part]['brier'][n]:.3f})")
+        # Reference: Brier of always predicting the partition prevalence
+        out[part]["brier_prevalence_baseline"] = round(float(y.mean() * (1 - y.mean())), 4)
+        ax.plot([0, 1], [0, 1], "k--", label="Perfect calibration")
+        ax.set(title=f"{part.capitalize()} (n={len(y)}, defaults={int(y.sum())})",
+               xlabel="Mean predicted probability", ylabel="Observed default rate")
+        ax.legend()
+    fig.suptitle(f"Reliability curves ({N_BINS} quantile bins)")
+    fig.savefig(EVALUATION / "fig_4_calibration_curves.png", dpi=300, bbox_inches="tight")
+    plt.close(fig)
 
-    # Persist Brier scores for the report
-    from sklearn.metrics import roc_auc_score, average_precision_score
-    with open("results/tables/calibration.txt", "w") as f:
-        for name in ["logreg", "rf", "xgb"]:
-            y_proba = np.load(ARTIFACTS / f"y_proba_{name}.npy")
-            f.write(f"{name.upper()} brier={brier_score_loss(y_test, y_proba):.4f}\n")
-    print("Calibration figure saved. Brier scores written to results/tables/calibration.txt")
+    out["method"] = f"assessment only; no calibrator fitted; {N_BINS} quantile bins"
+    (EVALUATION / "calibration.json").write_text(json.dumps(out, indent=2))
+    print(json.dumps(out, indent=2))
+
 
 if __name__ == "__main__":
     main()
