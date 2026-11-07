@@ -1,0 +1,17 @@
+,Logistic Regression,Random Forest,XGBoost
+total_inflow,11.0,12.0,15.0
+total_outflow,15.0,11.0,13.0
+avg_monthly_inflow,4.0,8.0,5.0
+avg_monthly_outflow,1.0,13.0,14.0
+inflow_volatility,2.0,1.0,2.0
+outflow_volatility,5.0,10.0,11.0
+transaction_frequency,7.0,14.0,12.0
+avg_balance,3.0,7.0,7.0
+min_balance,10.0,6.0,4.0
+max_balance,9.0,9.0,9.0
+balance_volatility,16.0,5.0,10.0
+account_tenure_days,14.0,3.0,3.0
+active_months,13.0,15.0,8.0
+loan_amount,12.0,4.0,6.0
+loan_duration,8.0,16.0,16.0
+loan_payment,6.0,2.0,1.0

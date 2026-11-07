@@ -1,0 +1,8 @@
+{
+  "test_rows": 45,
+  "test_defaults": 3,
+  "prevalence": 0.0667,
+  "threshold": 0.5,
+  "final_model": "rf",
+  "bootstrap_resamples": 2000
+}
