@@ -1,0 +1,36 @@
+{
+  "rule": "boundaries on unique issuance dates; same-date loans kept together",
+  "train_frac_of_dates": 0.6,
+  "val_frac_of_dates": 0.2,
+  "train_end_date": "1995-09-22",
+  "val_end_date": "1996-11-28",
+  "partitions": {
+    "train": {
+      "loans": 141,
+      "defaults": 20,
+      "non_defaults": 121,
+      "default_rate": 0.1418,
+      "start_date": "1993-07-05",
+      "end_date": "1995-09-22",
+      "unique_dates": 124
+    },
+    "val": {
+      "loans": 48,
+      "defaults": 8,
+      "non_defaults": 40,
+      "default_rate": 0.1667,
+      "start_date": "1995-10-08",
+      "end_date": "1996-11-28",
+      "unique_dates": 42
+    },
+    "test": {
+      "loans": 45,
+      "defaults": 3,
+      "non_defaults": 42,
+      "default_rate": 0.0667,
+      "start_date": "1996-12-11",
+      "end_date": "1997-12-28",
+      "unique_dates": 42
+    }
+  }
+}

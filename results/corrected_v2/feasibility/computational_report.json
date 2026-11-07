@@ -1,0 +1,45 @@
+{
+  "models": {
+    "logreg": {
+      "training_time_s": 0.0039,
+      "inference_ms_per_loan": 0.0046,
+      "shap_ms_per_loan": 0.03,
+      "lime_ms_per_loan": 14.6,
+      "model_file_kb": 2.4
+    },
+    "rf": {
+      "training_time_s": 0.0682,
+      "inference_ms_per_loan": 0.2869,
+      "shap_ms_per_loan": 1.85,
+      "lime_ms_per_loan": 49.1,
+      "model_file_kb": 228.1
+    },
+    "xgb": {
+      "training_time_s": 0.0318,
+      "inference_ms_per_loan": 0.0338,
+      "shap_ms_per_loan": 1.14,
+      "lime_ms_per_loan": 22.4,
+      "model_file_kb": 126.8
+    }
+  },
+  "peak_rss_mb": 255.5,
+  "hardware": {
+    "cpu_model": "Apple M4",
+    "physical_cores": 10,
+    "logical_cores": 10,
+    "ram_gb": 16.0,
+    "platform": "macOS-26.6-arm64-arm-64bit"
+  },
+  "software": {
+    "python": "3.11.17",
+    "scikit-learn": "1.3.2",
+    "xgboost": "2.0.3",
+    "shap": "0.44.0"
+  },
+  "procedure": {
+    "inference": "median of 50 predict_proba calls on validation partition",
+    "shap": "one pass over validation partition, training-partition background",
+    "lime": "mean over 5 loans, 5000 samples each",
+    "training": "single fit on training partition, from 07"
+  }
+}

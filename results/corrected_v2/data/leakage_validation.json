@@ -1,0 +1,14 @@
+{
+  "status_not_predictor": true,
+  "completed_loans_only": true,
+  "cutoff_strictly_before_issue": true,
+  "window_recount_matches_all_loans": true,
+  "same_day_transactions_excluded": 55,
+  "no_missing_values": true,
+  "one_row_per_loan": true,
+  "rows": 234,
+  "target_distribution": {
+    "0": 203,
+    "1": 31
+  }
+}
