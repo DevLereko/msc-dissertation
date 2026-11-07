@@ -1,57 +1,69 @@
 """
 05_leakage_validation.py
-Validates that no post-origination information entered the feature set.
+Validates the leakage-prevention rules in Table 5 against the corrected (v2)
+analytical dataset. Every rule is an assertion; the script fails loudly.
 """
 
-import pandas as pd
-from pathlib import Path
+import json
 
-PROCESSED = Path("data/processed")
+import pandas as pd
+
+from config import DATA, FEATURE_COLS, SOURCE
+
 
 def main():
-    loan = pd.read_csv(PROCESSED / "loan_with_target.csv")
-    trans = pd.read_csv(PROCESSED / "trans.csv", low_memory=False)
-    df = pd.read_csv(PROCESSED / "analytical_dataset.csv")
-
-    # Rule 1: Target not used as predictor
-    assert "status" not in df.columns, "Status leaked as predictor"
-    print("[OK] Rule 1: Status not used as predictor")
-
-    # Rule 2: All features computed from pre-origination data (checked programmatically
-    # during construction; report the min/max observation windows)
-    assert (df["account_tenure_days"] >= 0).all(), "Negative tenure detected"
-    print("[OK] Rule 2: All accounts have positive pre-origination tenure")
-
-    # Rule 3: No null targets
-    assert df["target"].notna().all(), "Missing target values"
-    print("[OK] Rule 3: No missing target values")
-
-    # Rule 4: All loans have transaction history
-    assert (df["transaction_frequency"] > 0).all(), "Loans with no transactions"
-    print("[OK] Rule 4: All loans have historical transaction data")
-
-    # Extra check: verify construction used only the pre-origination window by
-# independently recomputing, for a sample of accounts, the number of
-# transactions on or before the loan date and comparing it to the analytical
-# dataset's transaction_frequency.
+    df = pd.read_csv(DATA / "analytical_dataset.csv",
+                     parse_dates=["loan_date", "transaction_cutoff"])
+    loan = pd.read_csv(SOURCE / "loan.csv")
+    trans = pd.read_csv(SOURCE / "trans.csv", low_memory=False,
+                        usecols=["account_id", "date"])
     trans["date"] = pd.to_datetime(trans["date"], format="%y%m%d")
-    loan_orig = df[["account_id", "loan_date", "transaction_frequency"]].copy()
-    loan_orig["loan_date"] = pd.to_datetime(loan_orig["loan_date"])
-    sample = loan_orig.sample(min(50, len(loan_orig)), random_state=42)
-    sub = trans[trans["account_id"].isin(set(sample["account_id"]))]
-    merged = sample.merge(sub, on="account_id", how="left")
-    pre_orig = merged[merged["date"] <= merged["loan_date"]]
-    recon = pre_orig.groupby("account_id").size().rename("recount")
-    check = sample.join(recon, on="account_id")
-    tol = (check["transaction_frequency"] - check["recount"]).abs()
-    assert (tol <= 1e-9).all(), "Feature window does not match pre-origination window"
-    print(
-        "[OK] Rule 5: Independently reconstructed pre-origination windows match "
-        "analytical features (no future leakage)"
-    )
+    results = {}
 
-    print(f"\nFinal analytical dataset: {df.shape[0]} loans, {df.shape[1]} columns")
-    print(f"Target distribution: {df['target'].value_counts().to_dict()}")
+    # Rule 1 — status only builds the target, never a predictor
+    assert "status" not in df.columns and "status" not in FEATURE_COLS
+    assert "target" not in FEATURE_COLS
+    results["status_not_predictor"] = True
+
+    # Rule 2 — cohort is completed loans only (no C/D)
+    status = loan.set_index("loan_id").loc[df["loan_id"], "status"]
+    assert set(status) <= {"A", "B"}, "Running loans (C/D) in cohort"
+    assert ((status == "B").astype(int).values == df["target"].values).all()
+    results["completed_loans_only"] = True
+
+    # Rule 3 — strict cutoff: latest transaction used is before issue date
+    assert (df["transaction_cutoff"] < df["loan_date"]).all()
+    results["cutoff_strictly_before_issue"] = True
+
+    # Rule 4 — full independent recount of the strict window for EVERY loan
+    m = df[["loan_id", "account_id", "loan_date"]].merge(trans, on="account_id")
+    strict = m[m["date"] < m["loan_date"]].groupby("loan_id").size()
+    inclusive = m[m["date"] <= m["loan_date"]].groupby("loan_id").size()
+    recount = strict.reindex(df["loan_id"]).fillna(0).values
+    assert (recount == df["transaction_frequency"].values).all(), \
+        "transaction_frequency does not match strict pre-issue window"
+    n_same_day = int((inclusive.reindex(df["loan_id"]).fillna(0).values - recount).sum())
+    results["window_recount_matches_all_loans"] = True
+    results["same_day_transactions_excluded"] = n_same_day
+
+    # Rule 5 — no missing targets/features, every loan has history
+    assert df["target"].notna().all()
+    assert df[FEATURE_COLS].notna().all().all()
+    assert (df["transaction_frequency"] > 0).all()
+    results["no_missing_values"] = True
+
+    # Rule 6 — one row per loan
+    assert df["loan_id"].is_unique
+    results["one_row_per_loan"] = True
+
+    results["rows"] = int(len(df))
+    results["target_distribution"] = {str(k): int(v) for k, v in
+                                      df["target"].value_counts().sort_index().items()}
+    with open(DATA / "leakage_validation.json", "w") as f:
+        json.dump(results, f, indent=2)
+    print(json.dumps(results, indent=2))
+    print("All leakage rules passed.")
+
 
 if __name__ == "__main__":
     main()
