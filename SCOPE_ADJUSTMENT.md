@@ -1,78 +1,45 @@
 # Scope Adjustment Record
 
-**Status:** pending supervisor approval. This record preserves evidence and
-documents a proposed scope adjustment. It does **not** change the analytical
-dataset, target mapping, model artifacts, or any existing `results/` output.
-Only documentation files are added/updated here, consistent with the controlled
-sequence (record the scope adjustment now; change the pipeline later, only after
-approval).
+**Date:** 04th November 2026
+**Approved by:** Prof. Kishor Kumar Reddy (supervisor)
+**Reference:** Request for guidance and approval on dissertation target definition -  04th November 2026
 
-## 1. Change proposed
+## Decision
 
-Mark the **prior-loan history** predictor as **unavailable in the current PKDD
-'99 dataset**, rather than as a candidate feature pending further investigation.
+Following consultation with the supervisor, the study adopts **Approach 2** for
+the target variable definition:
 
-- The prior-loan history feature is **not currently a predictor** in the model.
-  The 16 predictors are the 13 behavioural + 3 loan-attribute columns listed in
-  `RESULTS_AUDIT_REPORT.md` section D. No pipeline file regresses because of this
-  record; it captures the decision to **stop treating prior-loan history as a
-  viable feature** in this dataset.
-- Because no same-client multi-loan relationships exist, there is nothing to
-  engineer. Including this finding in the methodology means the feature is
-  documented as **data-unavailable**, not as a modelling choice made on the
-  current data.
+- **Target cohort:** Completed loans only
+- **Included statuses:** A (finished/paid) and B (finished/not paid)
+- **Excluded statuses:** C (running/paid) and D (running/in debt)
+- **Target mapping:** A → 0 (non-default); B → 1 (default)
+- **Expected analytical cohort:** 234 loans (203 non-default; 31 default)
 
-## 2. Evidence (read-only audit)
+## Rationale (as per supervisor correspondence)
 
-Audit source and outputs (read only; pipeline and models untouched):
+Statuses A and B describe completed loan outcomes. Statuses C and D describe
+loans that were still running at the dataset extraction point. Combining
+them into a single binary target conflates completed non-payment with
+ongoing indebtedness. Using completed loans only produces a target that
+more closely represents a completed-loan outcome task, while explicitly
+acknowledging the reduced sample size.
 
-- Script: `src/13_prior_loan_feasibility.py`
-- Findings: `results/audit/prior_loan_feasibility.json`
-- Summary: `results/audit/prior_loan_feasibility_summary.txt`
+## Consequences for the study
 
-The audit reads the raw `data/raw/*.asc` tables directly and reports:
+- The empirical cohort changes from 682 to 234 loans.
+- Chapter 3 (target definition, population, inclusion/exclusion criteria)
+  and Chapter 4 (analytical dataset section) must be updated.
+- Existing baseline results (682-loan run) remain preserved under
+  `results/baseline_v1/` as a documented comparator.
+- The framework itself is unchanged; the target change affects the
+  empirical demonstration, not the architecture.
 
-| Question | Finding |
-| --- | --- |
-| Q1. Clients linked to multiple loan accounts | **0** (owner-only: 0/682; any disp link: 0/827). Every loan-bearing account is owned by a distinct, unique client. |
-| Q2. Earlier-to-later same-client loan pairs | **0**. With no client holding two loans, no ordered pair exists. |
-| Q3. When an earlier loan's outcome became known | Not establishable from the schema (no completion date, no snapshot extraction date); moot because no pairs exist. |
-| Q4. Supportable prior-loan features | None usable: relationship prerequisite fails. Tier-1 count/date features are vacuous (always 0); Tier-2 outcome flags are unsupported; Tier-3 requires fields not in the schema. |
+## Feature-timing correction (separate)
 
-Decisive finding (`prior_loan_feasibility.json` → `conclusion`):
-> ZERO clients are associated with more than one loan account in the PKDD '99
-> snapshot ... there are ZERO earlier->later same-client loan pairs to
-> reconstruct, so a previous-loan repayment feature cannot be built from this
-> dataset at all.
+A separate methodological correction — strict pre-issuance cutoff
+(`transaction_date < loan_date`) — remains required. This will be confirmed
+with the supervisor separately if the university requires explicit approval.
 
-## 3. Implication for the methodology / feature table
+## Approval status
 
-The methodology's feature table remains **as implemented**: 16 predictors
-(13 behavioural + 3 loan attributes). Prior-loan history is recorded as:
-
-- **Status: unavailable in this dataset** (a tested dataset limitation, replacing
-  a previously unverified assumption about prior-loan history).
-- **Reason:** the relational tables (`client` → `disp` → `account` → `loan`)
-  contain no client associated with more than one loan account.
-- **Consequence:** no prior-loan predictor is constructed; no leakage risk arises
-  from it; no claim about prior-loan repayment behaviour is made.
-
-## 4. Boundary of this scope adjustment
-
-This record deliberately does **not**:
-
-- change the target mapping (A/C = non-default, B/D = default) — retained pending
-  a separate, explicit target review;
-- change the feature pipeline or same-day transaction handling — deferred to the
-  controlled pipeline-correction step;
-- regenerate the analytical dataset, refit models, or overwrite any `results/`
-  artifact;
-- introduce the prior-loan feature into the model.
-
-## 5. Approval
-
-Draft for supervisor review. On approval, this record becomes the documented
-basis for (a) keeping prior-loan history out of the model and (b) describing it
-in dissertation Chapters 4/5 as a dataset limitation rather than a modelling
-choice. Until approval, the existing results (baseline) remain the authoritative
-reported outputs.
+Approved by supervisor.

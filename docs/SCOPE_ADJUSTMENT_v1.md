@@ -42,5 +42,4 @@ with the supervisor separately if the university requires explicit approval.
 
 ## Approval status
 
-Approved by supervisor. Retain this record with correspondence for the
-dissertation appendix.
+Approved by supervisor.
