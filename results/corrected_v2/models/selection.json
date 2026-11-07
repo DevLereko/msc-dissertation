@@ -1,0 +1,43 @@
+{
+  "tuning_mode": "validation_partition",
+  "selection_criterion": "validation PR-AUC (average precision); tie-break validation ROC-AUC",
+  "best_params": {
+    "logreg": {
+      "C": 100
+    },
+    "rf": {
+      "n_estimators": 100,
+      "max_depth": 10,
+      "min_samples_split": 5
+    },
+    "xgb": {
+      "n_estimators": 100,
+      "learning_rate": 0.05,
+      "max_depth": 5
+    }
+  },
+  "validation_comparison": {
+    "logreg": {
+      "val_pr_auc": 0.222,
+      "val_roc_auc": 0.6
+    },
+    "rf": {
+      "val_pr_auc": 0.3658,
+      "val_roc_auc": 0.6687
+    },
+    "xgb": {
+      "val_pr_auc": 0.2703,
+      "val_roc_auc": 0.5938
+    }
+  },
+  "final_model": "rf",
+  "decision_threshold": 0.5,
+  "threshold_rule": "fixed 0.5 baseline (Section 3.7.4 step 8)",
+  "fitted_on": "training partition only",
+  "train_rows": 141,
+  "train_defaults": 20,
+  "val_rows": 48,
+  "val_defaults": 8,
+  "caveat": "When tuning_mode is validation_partition, the same validation partition is used for hyperparameter tuning and model selection, so validation scores are optimistic; only test scores are unbiased.",
+  "frozen_at": "2026-11-07T14:44:03"
+}

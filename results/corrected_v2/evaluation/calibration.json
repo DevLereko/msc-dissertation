@@ -1,0 +1,23 @@
+{
+  "validation": {
+    "rows": 48,
+    "defaults": 8,
+    "brier": {
+      "logreg": 0.234,
+      "rf": 0.1311,
+      "xgb": 0.1707
+    },
+    "brier_prevalence_baseline": 0.1389
+  },
+  "test": {
+    "rows": 45,
+    "defaults": 3,
+    "brier": {
+      "logreg": 0.1788,
+      "rf": 0.0595,
+      "xgb": 0.0802
+    },
+    "brier_prevalence_baseline": 0.0622
+  },
+  "method": "assessment only; no calibrator fitted; 5 quantile bins"
+}

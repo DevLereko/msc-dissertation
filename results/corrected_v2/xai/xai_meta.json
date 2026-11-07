@@ -1,0 +1,107 @@
+{
+  "explained_model": "rf",
+  "shap_explainer": "TreeExplainer (interventional, probability output)",
+  "background_data": "training partition (141 loans)",
+  "explained_instances": "test partition (45 loans)",
+  "local_cases": {
+    "highest_risk": {
+      "loan_id": 6059,
+      "predicted_proba": 0.4589,
+      "weights": [
+        [
+          "min_balance <= 300.00",
+          0.09266
+        ],
+        [
+          "inflow_volatility > 26677.48",
+          0.08279
+        ],
+        [
+          "loan_payment > 6239.00",
+          0.08078
+        ],
+        [
+          "account_tenure_days <= 211.00",
+          0.06596
+        ],
+        [
+          "balance_volatility > 24439.88",
+          0.03302
+        ],
+        [
+          "transaction_frequency <= 36.00",
+          0.01778
+        ],
+        [
+          "active_months <= 8.00",
+          0.01508
+        ],
+        [
+          "outflow_volatility > 22299.33",
+          0.01442
+        ],
+        [
+          "158586.50 < total_inflow <= 267848.90",
+          -0.01316
+        ],
+        [
+          "51408.00 < loan_amount <= 91200.00",
+          -0.01049
+        ]
+      ]
+    },
+    "lowest_risk": {
+      "loan_id": 5134,
+      "predicted_proba": 0.0,
+      "weights": [
+        [
+          "inflow_volatility <= 6320.15",
+          -0.04747
+        ],
+        [
+          "avg_balance <= 33229.11",
+          0.03478
+        ],
+        [
+          "300.00 < min_balance <= 700.00",
+          -0.0292
+        ],
+        [
+          "16160.41 < avg_monthly_inflow <= 23879.95",
+          -0.02126
+        ],
+        [
+          "211.00 < account_tenure_days <= 363.00",
+          -0.02033
+        ],
+        [
+          "11703.04 < balance_volatility <= 19235.73",
+          -0.01998
+        ],
+        [
+          "6692.35 < outflow_volatility <= 12228.49",
+          -0.01361
+        ],
+        [
+          "51408.00 < loan_amount <= 91200.00",
+          -0.01309
+        ],
+        [
+          "56498.40 < max_balance <= 82549.00",
+          -0.01229
+        ],
+        [
+          "36.00 < transaction_frequency <= 67.00",
+          -0.01124
+        ]
+      ]
+    }
+  },
+  "top5_final_model": {
+    "inflow_volatility": 0.0406,
+    "loan_payment": 0.0387,
+    "account_tenure_days": 0.0234,
+    "loan_amount": 0.0226,
+    "balance_volatility": 0.0163
+  }
+}

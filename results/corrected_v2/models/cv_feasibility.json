@@ -1,0 +1,202 @@
+{
+  "min_pos_per_fold": 5,
+  "min_folds": 3,
+  "chosen_k": null,
+  "folds_by_k": {
+    "k=3": {
+      "feasible": false,
+      "folds": [
+        {
+          "fold": 1,
+          "fit_range": [
+            "1993-07-05",
+            "1994-03-15"
+          ],
+          "val_range": [
+            "1994-03-16",
+            "1994-08-07"
+          ],
+          "fit_loans": 33,
+          "fit_defaults": 5,
+          "val_loans": 37,
+          "val_defaults": 7
+        },
+        {
+          "fold": 2,
+          "fit_range": [
+            "1993-07-05",
+            "1994-08-07"
+          ],
+          "val_range": [
+            "1994-08-10",
+            "1995-01-03"
+          ],
+          "fit_loans": 70,
+          "fit_defaults": 12,
+          "val_loans": 37,
+          "val_defaults": 4
+        },
+        {
+          "fold": 3,
+          "fit_range": [
+            "1993-07-05",
+            "1995-01-03"
+          ],
+          "val_range": [
+            "1995-01-08",
+            "1995-09-22"
+          ],
+          "fit_loans": 107,
+          "fit_defaults": 16,
+          "val_loans": 34,
+          "val_defaults": 4
+        }
+      ]
+    },
+    "k=4": {
+      "feasible": false,
+      "folds": [
+        {
+          "fold": 1,
+          "fit_range": [
+            "1993-07-05",
+            "1994-02-07"
+          ],
+          "val_range": [
+            "1994-02-17",
+            "1994-06-12"
+          ],
+          "fit_loans": 27,
+          "fit_defaults": 4,
+          "val_loans": 28,
+          "val_defaults": 4
+        },
+        {
+          "fold": 2,
+          "fit_range": [
+            "1993-07-05",
+            "1994-06-12"
+          ],
+          "val_range": [
+            "1994-06-17",
+            "1994-09-30"
+          ],
+          "fit_loans": 55,
+          "fit_defaults": 8,
+          "val_loans": 31,
+          "val_defaults": 6
+        },
+        {
+          "fold": 3,
+          "fit_range": [
+            "1993-07-05",
+            "1994-09-30"
+          ],
+          "val_range": [
+            "1994-10-02",
+            "1995-03-04"
+          ],
+          "fit_loans": 86,
+          "fit_defaults": 14,
+          "val_loans": 30,
+          "val_defaults": 4
+        },
+        {
+          "fold": 4,
+          "fit_range": [
+            "1993-07-05",
+            "1995-03-04"
+          ],
+          "val_range": [
+            "1995-03-11",
+            "1995-09-22"
+          ],
+          "fit_loans": 116,
+          "fit_defaults": 18,
+          "val_loans": 25,
+          "val_defaults": 2
+        }
+      ]
+    },
+    "k=5": {
+      "feasible": false,
+      "folds": [
+        {
+          "fold": 1,
+          "fit_range": [
+            "1993-07-05",
+            "1994-01-10"
+          ],
+          "val_range": [
+            "1994-01-21",
+            "1994-05-26"
+          ],
+          "fit_loans": 23,
+          "fit_defaults": 4,
+          "val_loans": 23,
+          "val_defaults": 3
+        },
+        {
+          "fold": 2,
+          "fit_range": [
+            "1993-07-05",
+            "1994-05-26"
+          ],
+          "val_range": [
+            "1994-05-31",
+            "1994-08-10"
+          ],
+          "fit_loans": 46,
+          "fit_defaults": 7,
+          "val_loans": 25,
+          "val_defaults": 5
+        },
+        {
+          "fold": 3,
+          "fit_range": [
+            "1993-07-05",
+            "1994-08-10"
+          ],
+          "val_range": [
+            "1994-08-11",
+            "1994-11-04"
+          ],
+          "fit_loans": 71,
+          "fit_defaults": 12,
+          "val_loans": 25,
+          "val_defaults": 2
+        },
+        {
+          "fold": 4,
+          "fit_range": [
+            "1993-07-05",
+            "1994-11-04"
+          ],
+          "val_range": [
+            "1994-11-06",
+            "1995-03-27"
+          ],
+          "fit_loans": 96,
+          "fit_defaults": 14,
+          "val_loans": 24,
+          "val_defaults": 4
+        },
+        {
+          "fold": 5,
+          "fit_range": [
+            "1993-07-05",
+            "1995-03-27"
+          ],
+          "val_range": [
+            "1995-04-01",
+            "1995-09-22"
+          ],
+          "fit_loans": 120,
+          "fit_defaults": 18,
+          "val_loans": 21,
+          "val_defaults": 2
+        }
+      ]
+    }
+  }
+}

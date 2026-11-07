@@ -1,0 +1,23 @@
+{
+  "explained_model": "rf",
+  "refit_stability": {
+    "method": "20 bootstrap refits of training partition, frozen hyperparameters; SHAP on validation partition; pairwise Spearman of mean |SHAP|",
+    "mean_rho": 0.5846,
+    "sd_rho": 0.1903,
+    "min_rho": -0.0118,
+    "resamples_skipped_no_positives": 0
+  },
+  "shap_vs_lime": {
+    "instances": 48,
+    "spearman_rho": 0.8529,
+    "p_value": 0.0,
+    "lime_settings": "num_samples=2000, discretize_continuous=False, training-partition background"
+  },
+  "top5_by_mean_rank": [
+    "inflow_volatility",
+    "loan_payment",
+    "loan_amount",
+    "balance_volatility",
+    "avg_balance"
+  ]
+}

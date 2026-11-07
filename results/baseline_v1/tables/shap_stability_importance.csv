@@ -1,0 +1,17 @@
+feature,mean_abs_shap
+inflow_volatility,1.2164791
+avg_balance,1.1149032
+loan_payment,0.7756717
+min_balance,0.7311432
+loan_amount,0.7025023
+account_tenure_days,0.5269202
+avg_monthly_inflow,0.40195912
+transaction_frequency,0.35565466
+total_outflow,0.268009
+balance_volatility,0.26536614
+outflow_volatility,0.24894965
+max_balance,0.2136286
+total_inflow,0.18274243
+avg_monthly_outflow,0.0853766
+loan_duration,0.03815935
+active_months,0.036649995

@@ -1,0 +1,15 @@
+{
+  "training_times_seconds": {
+    "logreg": 2.1677300930023193,
+    "rf": 1.4926142692565918,
+    "xgb": 0.4275169372558594
+  },
+  "memory_usage_mb": 17.02,
+  "cpu_count": 10,
+  "cpu_physical": 10,
+  "cpu_model": "Apple M4",
+  "platform": "macOS-26.6-arm64-arm-64bit",
+  "python_version": "3.11.17",
+  "host": "Lerekos-Air",
+  "hardware_note": "Consumer-grade Apple M4 (10 physical / 10 logical cores)"
+}

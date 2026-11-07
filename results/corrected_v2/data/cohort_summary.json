@@ -1,0 +1,14 @@
+{
+  "total_loan_records": 682,
+  "status_counts": {
+    "A": 203,
+    "B": 31,
+    "C": 403,
+    "D": 45
+  },
+  "excluded_status_C": 403,
+  "excluded_status_D": 45,
+  "completed_cohort": 234,
+  "non_default_A": 203,
+  "default_B": 31
+}

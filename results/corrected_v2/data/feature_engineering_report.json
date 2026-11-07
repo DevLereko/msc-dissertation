@@ -1,0 +1,18 @@
+{
+  "cohort_in": 234,
+  "final_rows": 234,
+  "excluded": 0,
+  "excluded_by_reason": {},
+  "excluded_loans": [],
+  "target_distribution": {
+    "0": 203,
+    "1": 31
+  },
+  "same_day_transactions_excluded": 55,
+  "cutoff_rule": "transaction date < loan_date",
+  "n_features": 16,
+  "loan_date_range": [
+    "1993-07-05",
+    "1997-12-28"
+  ]
+}

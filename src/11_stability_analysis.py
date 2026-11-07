@@ -1,69 +1,111 @@
 """
 11_stability_analysis.py
-Cross-fold stability of SHAP and LIME feature importance.
-Note: The pipeline computes SHAP-based stability. LIME is available as an
-extension but is not run by default (see README).
+Explanation stability and consistency (Section 3.7.5 B).
+
+Corrected v2 — stability is measured across INDEPENDENTLY REFITTED models,
+not repeated explanations of one fitted model:
+
+1. Refit stability: the final model's frozen hyperparameters are refitted on
+   N_REFITS bootstrap resamples of the training partition (XGBoost class weight
+   recomputed per resample). Each refit is explained on the same reference set
+   (validation partition) and pairwise Spearman rho of mean |SHAP| rankings is
+   reported.
+2. Cross-technique consistency: SHAP vs LIME global rankings for the frozen
+   final model on the validation partition.
+
+The test partition is not used.
 """
 
+import json
+
+import joblib
 import numpy as np
 import pandas as pd
-import joblib
-import shap
+from lime.lime_tabular import LimeTabularExplainer
 from scipy.stats import spearmanr
-from pathlib import Path
-from sklearn.model_selection import StratifiedKFold
 
-PROCESSED = Path("data/processed")
-ARTIFACTS = Path("results/artifacts")
-TABLES = Path("results/tables")
-TABLES.mkdir(parents=True, exist_ok=True)
+from config import FEATURE_COLS, MODELS, RANDOM_SEED, SPLITS, STABILITY
+from modeling import DISPLAY, fit_model
 
-FEATURE_COLS = [
-    "total_inflow", "total_outflow", "avg_monthly_inflow", "avg_monthly_outflow",
-    "inflow_volatility", "outflow_volatility", "transaction_frequency",
-    "avg_balance", "min_balance", "max_balance", "balance_volatility",
-    "active_months", "account_tenure_days",
-    "loan_amount", "loan_duration", "loan_payment",
-]
+import importlib
+shap_explanation = importlib.import_module("10_xai_analysis").shap_explanation
+
+N_REFITS = 20
+N_LIME = 48            # all validation loans
+
+
+def pairwise_spearman(mat):
+    rhos = [spearmanr(mat[i], mat[j])[0]
+            for i in range(len(mat)) for j in range(i + 1, len(mat))]
+    return float(np.mean(rhos)), float(np.std(rhos)), float(np.min(rhos))
+
 
 def main():
-    train = pd.read_csv(PROCESSED / "train.csv")
-    X_train = train[FEATURE_COLS].fillna(0)
-    y_train = train["target"]
+    sel = json.loads((MODELS / "selection.json").read_text())
+    final, params = sel["final_model"], sel["best_params"][sel["final_model"]]
+    train = pd.read_csv(SPLITS / "train.csv")
+    val = pd.read_csv(SPLITS / "val.csv")
+    X_tr, y_tr, X_va = train[FEATURE_COLS], train["target"], val[FEATURE_COLS]
 
-    xgb = joblib.load(ARTIFACTS / "xgb.pkl").best_estimator_
+    # ---- 1. refit stability ------------------------------------------------
+    rng = np.random.default_rng(RANDOM_SEED)
+    imps, skipped = [], 0
+    while len(imps) < N_REFITS:
+        idx = rng.integers(0, len(X_tr), len(X_tr))
+        if y_tr.iloc[idx].sum() == 0:
+            skipped += 1
+            continue
+        m = fit_model(final, params, X_tr.iloc[idx], y_tr.iloc[idx])
+        e = shap_explanation(final, m, X_tr.iloc[idx], X_va)
+        imps.append(np.abs(e.values).mean(axis=0))
+    imps = np.array(imps)
+    mean_rho, sd_rho, min_rho = pairwise_spearman(imps)
+    ranks = pd.DataFrame(imps, columns=FEATURE_COLS).rank(axis=1, ascending=False)
+    per_feature = pd.DataFrame({
+        "mean_abs_shap": imps.mean(axis=0),
+        "sd_abs_shap": imps.std(axis=0),
+        "mean_rank": ranks.mean().values,
+        "rank_sd": ranks.std().values,
+        "top5_frequency": (ranks <= 5).mean().values,
+    }, index=FEATURE_COLS).sort_values("mean_rank")
+    per_feature.to_csv(STABILITY / "refit_feature_stability.csv")
 
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    importance_per_fold = []
-    explainer = shap.TreeExplainer(xgb)
+    # ---- 2. SHAP vs LIME on the frozen final model ---------------------------
+    model = joblib.load(MODELS / f"{final}.pkl")
+    shap_imp = np.abs(shap_explanation(final, model, X_tr, X_va).values).mean(axis=0)
+    lime = LimeTabularExplainer(X_tr.to_numpy(), feature_names=FEATURE_COLS,
+                                mode="classification", random_state=RANDOM_SEED,
+                                discretize_continuous=False)
+    predict_fn = lambda a: model.predict_proba(pd.DataFrame(a, columns=FEATURE_COLS))
+    lime_w = np.zeros(len(FEATURE_COLS))
+    n = min(N_LIME, len(X_va))
+    for i in range(n):
+        exp = lime.explain_instance(X_va.iloc[i].to_numpy(), predict_fn,
+                                    num_features=len(FEATURE_COLS), num_samples=2000)
+        for fidx, w in exp.as_map()[1]:
+            lime_w[fidx] += abs(w)
+    lime_imp = lime_w / n
+    rho_sl, p_sl = spearmanr(shap_imp, lime_imp)
+    pd.DataFrame({"shap_mean_abs": shap_imp, "lime_mean_abs_weight": lime_imp},
+                 index=FEATURE_COLS).to_csv(STABILITY / "shap_vs_lime.csv")
 
-    for fold, (tr_idx, _) in enumerate(skf.split(X_train, y_train)):
-        X_fold = X_train.iloc[tr_idx]
-        shap_vals = explainer.shap_values(X_fold)
-        imp = np.abs(shap_vals).mean(axis=0)
-        importance_per_fold.append(imp)
+    report = {
+        "explained_model": final,
+        "refit_stability": {
+            "method": f"{N_REFITS} bootstrap refits of training partition, frozen hyperparameters; "
+                      "SHAP on validation partition; pairwise Spearman of mean |SHAP|",
+            "mean_rho": round(mean_rho, 4), "sd_rho": round(sd_rho, 4), "min_rho": round(min_rho, 4),
+            "resamples_skipped_no_positives": skipped,
+        },
+        "shap_vs_lime": {
+            "instances": n, "spearman_rho": round(float(rho_sl), 4), "p_value": round(float(p_sl), 4),
+            "lime_settings": "num_samples=2000, discretize_continuous=False, training-partition background",
+        },
+        "top5_by_mean_rank": per_feature.head(5).index.tolist(),
+    }
+    (STABILITY / "stability_report.json").write_text(json.dumps(report, indent=2))
+    print(json.dumps(report, indent=2))
 
-    # Cross-fold Spearman correlation between feature-importance rankings
-    correlations = []
-    for i in range(len(importance_per_fold)):
-        for j in range(i + 1, len(importance_per_fold)):
-            rho, _ = spearmanr(importance_per_fold[i], importance_per_fold[j])
-            correlations.append(rho)
-
-    mean_rho = np.mean(correlations)
-    std_rho = np.std(correlations)
-    print(f"SHAP mean cross-fold Spearman correlation: {mean_rho:.4f} (std {std_rho:.4f})")
-
-    mean_importance = np.mean(importance_per_fold, axis=0)
-    importance_df = pd.DataFrame({"feature": FEATURE_COLS, "mean_abs_shap": mean_importance})
-    importance_df = importance_df.sort_values("mean_abs_shap", ascending=False)
-    importance_df.to_csv(TABLES / "shap_stability_importance.csv", index=False)
-
-    with open(TABLES / "stability_shap.txt", "w") as f:
-        f.write(f"Mean Spearman rho (SHAP): {mean_rho:.4f}\n")
-        f.write(f"SD Spearman rho (SHAP): {std_rho:.4f}\n")
-
-    print("Stability report saved to results/tables/stability_shap.txt")
 
 if __name__ == "__main__":
     main()
