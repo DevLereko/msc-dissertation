@@ -1,0 +1,29 @@
+{
+  "train": {
+    "count": 409,
+    "start_date": "1993-07-05",
+    "end_date": "1997-06-13",
+    "class_distribution": {
+      "0": 354,
+      "1": 55
+    }
+  },
+  "val": {
+    "count": 136,
+    "start_date": "1997-06-13",
+    "end_date": "1998-01-27",
+    "class_distribution": {
+      "0": 118,
+      "1": 18
+    }
+  },
+  "test": {
+    "count": 137,
+    "start_date": "1998-01-27",
+    "end_date": "1998-12-08",
+    "class_distribution": {
+      "0": 134,
+      "1": 3
+    }
+  }
+}
