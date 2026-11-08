@@ -97,6 +97,13 @@
       ]
     }
   },
+  "dependence_plot_features": [
+    "inflow_volatility",
+    "loan_payment",
+    "account_tenure_days",
+    "loan_amount"
+  ],
+  "dependence_rule": "top 4 features by mean |SHAP| of the final model",
   "top5_final_model": {
     "inflow_volatility": 0.0406,
     "loan_payment": 0.0387,

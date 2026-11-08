@@ -73,7 +73,8 @@ def main():
 
     # ---- 2. SHAP vs LIME on the frozen final model ---------------------------
     model = joblib.load(MODELS / f"{final}.pkl")
-    shap_imp = np.abs(shap_explanation(final, model, X_tr, X_va).values).mean(axis=0)
+    sv_val = shap_explanation(final, model, X_tr, X_va).values
+    shap_imp = np.abs(sv_val).mean(axis=0)
     lime = LimeTabularExplainer(X_tr.to_numpy(), feature_names=FEATURE_COLS,
                                 mode="classification", random_state=RANDOM_SEED,
                                 discretize_continuous=False)
@@ -90,8 +91,40 @@ def main():
     pd.DataFrame({"shap_mean_abs": shap_imp, "lime_mean_abs_weight": lime_imp},
                  index=FEATURE_COLS).to_csv(STABILITY / "shap_vs_lime.csv")
 
+    # ---- 3. explanation variability for similar observations ---------------
+    # Each validation loan is paired with its nearest neighbour (Euclidean
+    # distance on features standardised with training-partition statistics)
+    # and, as a reference, with a randomly drawn validation loan. Similarity of
+    # the two SHAP vectors is measured by Spearman rho. Similar loans should
+    # receive more similar explanations than random pairs.
+    mu, sd = X_tr.mean(), X_tr.std(ddof=0).replace(0, 1)
+    Z = ((X_va - mu) / sd).to_numpy()
+    dist = np.linalg.norm(Z[:, None, :] - Z[None, :, :], axis=2)
+    np.fill_diagonal(dist, np.inf)
+    nn = dist.argmin(axis=1)
+    rng_pairs = np.random.default_rng(RANDOM_SEED)
+    rand = np.array([rng_pairs.choice([j for j in range(len(Z)) if j != i]) for i in range(len(Z))])
+    nn_rho = np.array([spearmanr(sv_val[i], sv_val[nn[i]])[0] for i in range(len(Z))])
+    rand_rho = np.array([spearmanr(sv_val[i], sv_val[rand[i]])[0] for i in range(len(Z))])
+    pd.DataFrame({"loan_id": val["loan_id"], "nearest_neighbour_loan_id": val["loan_id"].iloc[nn].values,
+                  "nn_distance": dist[np.arange(len(Z)), nn], "nn_shap_rho": nn_rho,
+                  "random_pair_shap_rho": rand_rho}).to_csv(STABILITY / "similar_observation_consistency.csv",
+                                                            index=False)
+    from scipy.stats import wilcoxon
+    w_stat, w_p = wilcoxon(nn_rho, rand_rho)
+
     report = {
         "explained_model": final,
+        "similar_observation_consistency": {
+            "method": "nearest neighbour vs random pair within validation partition; "
+                      "Spearman rho between SHAP vectors; Wilcoxon signed-rank test",
+            "pairs": int(len(Z)),
+            "nn_median_rho": round(float(np.median(nn_rho)), 4),
+            "random_median_rho": round(float(np.median(rand_rho)), 4),
+            "nn_mean_rho": round(float(np.mean(nn_rho)), 4),
+            "random_mean_rho": round(float(np.mean(rand_rho)), 4),
+            "wilcoxon_p": round(float(w_p), 4),
+        },
         "refit_stability": {
             "method": f"{N_REFITS} bootstrap refits of training partition, frozen hyperparameters; "
                       "SHAP on validation partition; pairwise Spearman of mean |SHAP|",

@@ -71,8 +71,18 @@ def main():
     plt.savefig(XAI / "fig_4_shap_bar.png", dpi=300, bbox_inches="tight")
     plt.close()
 
+    # Dependence plots — pre-declared rule: the 4 features with the highest
+    # mean |SHAP| for the final model (no test labels involved)
+    top4 = imp[DISPLAY[final]].sort_values(ascending=False).head(4).index.tolist()
+    for feat in top4:
+        plt.figure()
+        shap.plots.scatter(e[:, feat], color=e, show=False)
+        plt.title(f"SHAP dependence — {feat} ({DISPLAY[final]}, test partition)")
+        plt.savefig(XAI / f"fig_4_shap_dependence_{feat}.png", dpi=300, bbox_inches="tight")
+        plt.close("all")
+
     proba = model.predict_proba(X_te)[:, 1]
-    cases = {"highest_risk": int(np.argmax(proba)), "lowest_risk": int(np.argmin(proba))}
+    cases ={"highest_risk": int(np.argmax(proba)), "lowest_risk": int(np.argmin(proba))}
     for label, i in cases.items():
         plt.figure()
         shap.plots.waterfall(e[i], max_display=10, show=False)
@@ -101,6 +111,8 @@ def main():
         "background_data": f"training partition ({len(X_bg)} loans)",
         "explained_instances": f"test partition ({len(X_te)} loans)",
         "local_cases": lime_out,
+        "dependence_plot_features": top4,
+        "dependence_rule": "top 4 features by mean |SHAP| of the final model",
         "top5_final_model": imp[DISPLAY[final]].sort_values(ascending=False).head(5).round(4).to_dict(),
     }
     (XAI / "xai_meta.json").write_text(json.dumps(meta, indent=2))
