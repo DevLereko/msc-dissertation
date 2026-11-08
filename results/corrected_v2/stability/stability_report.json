@@ -1,10 +1,22 @@
 {
   "explained_model": "rf",
+  "similar_observation_consistency": {
+    "method": "nearest neighbour vs random pair within validation partition; Spearman rho between SHAP vectors; Wilcoxon signed-rank test",
+    "pairs": 48,
+    "nn_median_rho": 0.7132,
+    "random_median_rho": 0.1353,
+    "nn_mean_rho": 0.706,
+    "random_mean_rho": 0.1825,
+    "wilcoxon_p": 0.0
+  },
   "refit_stability": {
     "method": "20 bootstrap refits of training partition, frozen hyperparameters; SHAP on validation partition; pairwise Spearman of mean |SHAP|",
     "mean_rho": 0.5846,
     "sd_rho": 0.1903,
     "min_rho": -0.0118,
+    "max_rho": 0.9382,
+    "median_rho": 0.6118,
+    "n_pairs": 190,
     "resamples_skipped_no_positives": 0
   },
   "shap_vs_lime": {
