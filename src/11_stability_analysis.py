@@ -37,7 +37,8 @@ N_LIME = 48            # all validation loans
 def pairwise_spearman(mat):
     rhos = [spearmanr(mat[i], mat[j])[0]
             for i in range(len(mat)) for j in range(i + 1, len(mat))]
-    return float(np.mean(rhos)), float(np.std(rhos)), float(np.min(rhos))
+    return (float(np.mean(rhos)), float(np.std(rhos)), float(np.min(rhos)),
+            float(np.max(rhos)), float(np.median(rhos)))
 
 
 def main():
@@ -59,7 +60,7 @@ def main():
         e = shap_explanation(final, m, X_tr.iloc[idx], X_va)
         imps.append(np.abs(e.values).mean(axis=0))
     imps = np.array(imps)
-    mean_rho, sd_rho, min_rho = pairwise_spearman(imps)
+    mean_rho, sd_rho, min_rho, max_rho, median_rho = pairwise_spearman(imps)
     ranks = pd.DataFrame(imps, columns=FEATURE_COLS).rank(axis=1, ascending=False)
     per_feature = pd.DataFrame({
         "mean_abs_shap": imps.mean(axis=0),
@@ -95,6 +96,8 @@ def main():
             "method": f"{N_REFITS} bootstrap refits of training partition, frozen hyperparameters; "
                       "SHAP on validation partition; pairwise Spearman of mean |SHAP|",
             "mean_rho": round(mean_rho, 4), "sd_rho": round(sd_rho, 4), "min_rho": round(min_rho, 4),
+            "max_rho": round(max_rho, 4), "median_rho": round(median_rho, 4),
+            "n_pairs": N_REFITS * (N_REFITS - 1) // 2,
             "resamples_skipped_no_positives": skipped,
         },
         "shap_vs_lime": {

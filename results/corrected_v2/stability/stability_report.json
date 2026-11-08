@@ -5,6 +5,9 @@
     "mean_rho": 0.5846,
     "sd_rho": 0.1903,
     "min_rho": -0.0118,
+    "max_rho": 0.9382,
+    "median_rho": 0.6118,
+    "n_pairs": 190,
     "resamples_skipped_no_positives": 0
   },
   "shap_vs_lime": {
