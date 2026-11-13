@@ -20,7 +20,7 @@ From the repository root, the exact reproduction command is:
 ./venv/bin/python run_pipeline.py
 ```
 
-This command overwrites multiple processed CSVs, result tables, figures and serialized artifacts. It was **not** run during this audit. All eight raw `.asc` files are currently present. See [results/audit/reproduction_environment.txt](results/audit/reproduction_environment.txt) for the observed environment and timing methods.
+This command overwrites multiple processed CSVs, result tables, figures and serialized artifacts. It was **not** run during this audit. All eight raw `.asc` files are currently present. See [results/audit/reproduction_environment.txt](../../results/audit/reproduction_environment.txt) for the observed environment and timing methods.
 
 ## C. Dataset Verification and Analytical Population
 
@@ -154,7 +154,7 @@ The empirical results are from Czech banking data only. Local institutions would
 
 ## N. Methodology Coverage Matrix
 
-The machine-readable commitment-by-commitment classifications are in [results/audit/methodology_coverage.csv](results/audit/methodology_coverage.csv). They distinguish code/output evidence from documentation commitments that cannot be established by code. Summary: core data processing, model fitting, test metrics and basic XGBoost SHAP outputs exist; strict pre-issuance timing, temporal CV, validation-based selection, threshold analysis, comprehensive local/global XAI, refitted-fold stability and complete computational feasibility are partial or missing.
+The machine-readable commitment-by-commitment classifications are in [results/audit/methodology_coverage.csv](../../results/audit/methodology_coverage.csv). They distinguish code/output evidence from documentation commitments that cannot be established by code. Summary: core data processing, model fitting, test metrics and basic XGBoost SHAP outputs exist; strict pre-issuance timing, temporal CV, validation-based selection, threshold analysis, comprehensive local/global XAI, refitted-fold stability and complete computational feasibility are partial or missing.
 
 ## O. Research Objective and Research-Question Traceability
 

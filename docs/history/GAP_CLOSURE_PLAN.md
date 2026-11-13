@@ -4,11 +4,11 @@
 
 ## Planning Basis and Guardrails
 
-This plan uses the current [RESULTS_AUDIT_REPORT.md](RESULTS_AUDIT_REPORT.md) and verified files under [results/audit](results/audit/) as the evidence baseline. The audited primary evaluation is 682 loans, with a positional chronological 409/136/137 train/validation/test split. The test contains 3 defaults and 134 non-defaults. Existing metrics and outputs must remain intact and be labelled **baseline**, not silently replaced.
+This plan uses the current [RESULTS_AUDIT_REPORT.md](RESULTS_AUDIT_REPORT.md) and verified files under [results/audit](../../results/audit/) as the evidence baseline. The audited primary evaluation is 682 loans, with a positional chronological 409/136/137 train/validation/test split. The test contains 3 defaults and 134 non-defaults. Existing metrics and outputs must remain intact and be labelled **baseline**, not silently replaced.
 
 ### Scope adjustment — prior-loan history (recorded, pending approval)
 
-A read-only feasibility audit established that the PKDD '99 snapshot contains **no client associated with more than one loan account** and therefore **zero earlier-to-later same-client loan pairs**. Consequence: a prior-loan repayment-history predictor is **unavailable in this dataset**, not merely under-investigated. See [SCOPE_ADJUSTMENT.md](SCOPE_ADJUSTMENT.md) and `results/audit/prior_loan_feasibility.json` (`src/13_prior_loan_feasibility.py`). The 16-predictor feature table is unchanged; no pipeline or results file is altered by this record. Pending supervisor approval, prior-loan history is excluded from the methodology as a tested dataset limitation.
+A read-only feasibility audit established that the PKDD '99 snapshot contains **no client associated with more than one loan account** and therefore **zero earlier-to-later same-client loan pairs**. Consequence: a prior-loan repayment-history predictor is **unavailable in this dataset**, not merely under-investigated. See [SCOPE_ADJUSTMENT.md](../SCOPE_ADJUSTMENT_v1.md) and `results/audit/prior_loan_feasibility.json` (`src/13_prior_loan_feasibility.py`). The 16-predictor feature table is unchanged; no pipeline or results file is altered by this record. Pending supervisor approval, prior-loan history is excluded from the methodology as a tested dataset limitation.
 
 Recommended corrected artifacts, if later approved, should be written beneath a new versioned directory such as `results/corrected_v1/`, with a manifest naming code revision, input files/hashes, environment, target definition, prediction-time cutoff, split membership, seeds, and run date. Existing `results/`, `data/processed/`, and audit artifacts should not be overwritten. Keep the primary test loan membership unchanged unless the user explicitly approves a change after seeing its consequences; never alter it to improve class balance or metrics.
 
@@ -202,7 +202,7 @@ For Chapter 3, document the paradigm, quantitative comparative computational des
 9. **Stability scope:** Approve refitted time-aware fold models with a common validation reference cohort, with the limitation that validation is also used for model selection? Is similar-case variability required for the final implementation or documented as future work?
 10. **Framework contribution wording:** Present the result as (a) a reusable architectural prototype demonstrated on one dataset, with institution-specific adaptation guidance, or (b) a more fully configurable software framework requiring additional implementation? The present evidence supports (a); choice (b) expands scope.
 11. **Optional robustness work:** Approve any rolling-origin, completed-contract-only, uncertainty-interval, or split-tie sensitivity analysis individually. Each remains supplemental and separately labelled.
-12. **Prior-loan history exclusion:** Approve recording prior-loan history as *unavailable* in this dataset (no client has >1 loan account; zero same-client earlier-to-later pairs) per the read-only audit in [SCOPE_ADJUSTMENT.md](SCOPE_ADJUSTMENT.md). This keeps the 16-predictor feature table unchanged and does not alter the target mapping.
+12. **Prior-loan history exclusion:** Approve recording prior-loan history as *unavailable* in this dataset (no client has >1 loan account; zero same-client earlier-to-later pairs) per the read-only audit in [SCOPE_ADJUSTMENT.md](../SCOPE_ADJUSTMENT_v1.md). This keeps the 16-predictor feature table unchanged and does not alter the target mapping.
 
 ## Recommendation Before Chapter Finalisation
 
